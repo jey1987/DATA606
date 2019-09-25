@@ -278,7 +278,6 @@ The Probability is always 0.15 for nth Serve.
 
 (c) Even though parts (a) and (b) discuss the same scenario, the probabilities you calculated should be different. Can you explain the reason for this discrepancy?
 
-Both are similar and it is calculated the other way around. One calculates probablility of 10th server to be successful and the other checks if the 10th try will be successful.
-
+The Problem (a) has one more factor i.e. to calculate 3rd Successful serve and the Problem (b) is just the probability for successful 10th serve
 
 
