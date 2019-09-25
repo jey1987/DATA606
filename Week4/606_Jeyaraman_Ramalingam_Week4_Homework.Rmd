@@ -274,16 +274,7 @@ probability_three_bin
 (b) Suppose she has made two successful serves in nine attempts. What is the probability that her 10th serve will be successful?
 
 
-```{r binomial_Serves1, eval=TRUE}
-total_serves = 10 -1
-num_serves = 3 - 1
-prob_serves = 0.15
-
-number_of_serves <- factorial(total_serves)/(factorial(num_serves)*factorial(total_serves - num_serves))
-probability_four_bin <- number_of_serves*(prob_serves^num_serves)*((1-prob_serves)^(total_serves-num_serves))
-probability_four_bin
-
-```
+The Probability is always 0.15 for nth Serve.
 
 (c) Even though parts (a) and (b) discuss the same scenario, the probabilities you calculated should be different. Can you explain the reason for this discrepancy?
 
