@@ -41,7 +41,7 @@ india_trade_export_prep <- india_trade %>%
 **Below are two questions **
 
 *1. How many number of exports India is performing over the years and how does the trend look like?*
-*2. Which countries are top contributors to India's export over time?*
+*2. Which countries are top 5 contributors to India's export over time?*
 
 
 
