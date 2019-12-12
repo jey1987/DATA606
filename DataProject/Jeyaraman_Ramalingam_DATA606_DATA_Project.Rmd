@@ -1,0 +1,218 @@
+---
+title: DATA 606 Data Project Proposal
+author: JEYARAMAN RAMALINGAM
+output:
+  html_document:
+    keep_md: true
+    toc: true
+    toc_float: true
+---
+
+### Data Preparation
+
+```{r setup, echo=TRUE, results='hide', warning=FALSE, message=FALSE}
+library(tidyverse)
+library(RCurl)
+library("ggpubr")
+library("dplyr")
+library("data.table")
+library("bitops")
+library(statsr)
+
+
+file_url <- getURL("https://raw.githubusercontent.com/jey1987/DATA606/master/Week6/2018-2010_export.csv")
+india_trade <- data.frame(read.csv(text=file_url, header = TRUE),stringsAsFactors =FALSE)
+
+india_trade_commodity_prep <- india_trade %>%
+  select(Commodity,year) %>%
+  filter(Commodity == "PHARMACEUTICAL PRODUCTS") %>%
+  group_by(year,Commodity) %>%
+  summarize(comm_cnt = n())
+
+india_trade_export_prep <- india_trade %>%
+  select(value,country,year) %>%
+  group_by(year) %>%
+  arrange(desc(value),.by_group=TRUE) %>%
+  do(head(.,n=5))
+
+india_trade_commodity_analysis <- india_trade %>%
+  select(Commodity,value) %>%
+  mutate_if(is.character, str_trim) %>%
+  filter(Commodity == "PHARMACEUTICAL PRODUCTS" | Commodity == "ARTICLES OF IRON OR STEEL" | Commodity == "PLASTIC AND ARTICLES THEREOF." ) %>%
+  group_by(Commodity) %>%
+  summarise(comm_cnt = sum(value,na.rm = TRUE))
+
+india_trade_country_prep <- india_trade %>%
+  select(country,Commodity,year) %>%
+  mutate_if(is.character, str_trim) %>%
+  filter(year == 2018) %>%
+  group_by(country,Commodity)
+  
+
+```
+
+
+### Research question 
+
+**Below are two questions **
+
+*1. How many number of exports India is performing over the years and how does the trend look like? What is the relationship between number of exports and Commodity ? *
+*2. Which countries are top 5 contributors to India's export over time? Is there any dependency between commodity and number of exports ?*
+
+
+
+### Cases 
+
+**What are the cases, and how many are there?**
+There are 137023 Observations and 5 variables
+
+
+### Data collection 
+
+**Describe the method of data collection.**
+
+The data is collected by Kaggle and comprises of Indian export data from 2010 to 2018
+
+
+### Type of study 
+
+**What type of study is this (observational/experiment)?**
+
+The Study is Observatory
+
+### Data Source 
+
+**If you collected the data, state self-collected. If not, provide a citation/link.**
+
+Below is a link to the data source
+
+https://www.kaggle.com/lakshyaag/india-trade-data
+
+
+### Dependent Variable
+
+**What is the response variable? Is it quantitative or qualitative?**
+
+Below are Response variable for two questions ,
+
+1. Commodity Count (Numeric Variable)
+2. Sum of export amount per Country in a given year
+
+
+### Independent Variable
+
+**You should have two independent variables, one quantitative and one qualitative.**
+
+1. HS2 column will act like independent variable and Year will act like an experimental variable
+
+### Relevant summary statistics 
+
+**Provide summary statistics for each the variables. Also include appropriate visualizations related to your research question (e.g. scatter plot, boxplots, etc). This step requires the use of R, hence a code chunk is provided below. Insert more code chunks as needed.**
+
+```{r plot_sum , eval=TRUE}
+summary(india_trade_commodity_prep)
+dim(india_trade_commodity_prep)
+head(india_trade_commodity_prep)
+
+summary(india_trade_export_prep)
+dim(india_trade_export_prep)
+head(india_trade_export_prep)
+
+ggplot(data=india_trade_commodity_prep, aes(x=year, y=comm_cnt, group=1)) +
+  geom_line(linetype = "dashed",color="red")+
+  geom_point() + theme_minimal() + theme(legend.position="top") +
+  xlab("Year") + ylab("Number of Exports") + ggtitle("Number of Exports over years`") 
+
+ggplot(data=india_trade_export_prep, aes(x=year, y=value, fill=country)) +
+  geom_bar( stat="identity") + theme_minimal() + theme(axis.text.x = element_text(angle=90)) + 
+  xlab("Countries") + ylab("Amount Exported") + ggtitle("Top 5 Amount Exported by Countries by Year ") 
+```
+
+### Research Question 1
+
+**Below are the Conditions for this test**
+*1. The data is Independent within and outside group.*
+*2. The data is Normal and approximately equal to one another*
+
+Test Type : ANOVA to analyse the variance to conclude the relationship between Commodity and Number of Exports.
+
+Hypothesis:
+
+H0 = Null Hypothesis = The two variables are dependent
+HA = Alternate Hypothesis = The two variables are independent
+
+Relationship Box Plots
+
+```{r boxplot,eval=TRUE}
+ggboxplot(india_trade_commodity_analysis, x = "Commodity", y = "comm_cnt",
+          color = "Commodity", palette = c("#00AFBB", "#E7B800", "#FC4E07"),
+          ylab = "Number of Exports", xlab = "Year")
+
+ggline(india_trade_commodity_analysis, x = "Commodity", y = "comm_cnt",
+       add = c("mean_se", "jitter"), 
+       ylab = "Number of Exports", xlab = "Year")
+```
+
+Calculate AOV
+
+```{r aov_data,eval=TRUE}
+res_aov <- aov(comm_cnt ~ Commodity,data = india_trade_commodity_analysis)
+summary(res_aov)
+```
+
+Conclusion of Test
+
+```{r concl_test,eval=TRUE}
+TukeyHSD(res_aov)
+
+pairwise.t.test(india_trade_commodity_analysis$comm_cnt, india_trade_commodity_analysis$Commodity)
+```
+
+With the above results it is evident that the NULL Hypothesis can be rejected and can be conculded that the two variables are independent. Number of Exports is not constant for the commodity groups and it is completly varying for each commodity. 
+
+### Research Question 2
+
+*Is there any dependency between country and number of exports ?*
+
+Hypothesis
+
+H0 = Null Hypothesis = There is dependency between Country and Number of Exports.
+HA = Alternate Hypothesis = There is no dependency between Country and Number of Exports.
+
+Below are the Conditions for the test.
+
+1. Sampling is performed and only year 2018 is considered.
+2. Number of records is enough for performing this test.
+3. The data is independent.
+
+The test performed is chi-square test to calculate the inference between two categorical variables.
+
+CHI-SQUARE TEST
+
+```{r chi-sq,eval=TRUE}
+chisq.test(india_trade_country_prep$country, india_trade_country_prep$Commodity)
+```
+
+
+INFERENCE FUNCTION
+
+```{r inference,eval=TRUE,echo=FALSE,message=FALSE}
+inference(x = country, y = Commodity, data = india_trade_country_prep,statistic =   "proportion", type = "ht", null = 0,           alternative = "greater", method = "theoretical")
+```
+
+### Conclusion
+
+How many number of exports India is performing over the years and how does the trend look like? What is the relationship between number of exports and Commodity ? *
+
+The Trend over the years is captured using ggplot and the relationship is found out by conducting ANOVA test. It is found out that there is no relationship between Commodity and Number of exports as the numbers are not deviating because of Commodity. The Number of exports are not similar for the commodities.
+
+Which countries are top 5 contributors to India's export over time? Is there any dependency between commodity and number of exports 
+
+Top 5 contributors to India's exports are captured using ggplot. Countries have no impact on each other.
+
+### References
+
+https://www.kaggle.com/lakshyaag/india-trade-data
+https://www.rdocumentation.org/packages/stats/versions/3.6.1/topics/chisq.test
+
+
