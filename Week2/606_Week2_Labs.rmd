@@ -1,0 +1,61 @@
+---
+title: "Week2_Lab"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r cars, eval=TRUE}
+library("car")
+library('DATA606')
+startLab('Lab2') 
+source("more/cdc.R")
+```
+
+## Including Plots
+
+# Scatter Plot
+
+```{r plotWeight, echo=FALSE}
+plot(cdc$wtdesire,cdc$weight)
+```
+
+The two variables in this example are Desired Weight and Actual Weight. The relationship is actually the weight a person wants to maintain and the actual weight he weighs currently.
+
+
+# WDIFF
+
+
+```{r diffWeight, echo=FALSE}
+wdiff <- cdc$wtdesire - cdc$weight
+plot(wdiff)
+```
+
+There could be three values for the wdiff, 0 means the person is not deviated from his desired weight goal, Positive difference means the person is underweight and Negative difference means the person is overweight.  In General most people feel they are ideal but some people feel they are overweight comparing to the ones who feel underweight.
+
+# Men Vs Women
+
+m_dataset <- subset(cdc,gender == "m")
+f_dataset <- subset(cdc,gender == "f")
+
+wdiff_m <- m_dataset$wtdesire - m_dataset$weight
+wdiff_f <- f_dataset$wtdesire - f_dataset$weight
+
+summary(wdiff_m)
+summary(wdiff_f)
+
+boxplot(mean(wdiff_m) ~ mean(wdiff_f))
+
+```
+
+Men feel they are maintaining ideal weight comparing to women.
+
+
+```{r SDWeight, echo=FALSE}
+
+mean(cdc$weight)
+
+sd(cdc$weight)
+```
